@@ -347,9 +347,13 @@ Note: if you need to run both your source and sink connectors in different insta
 ```
 
 
+
+
+
 ```xml
 References: 
 https://www.confluent.io/hub/debezium/debezium-connector-mysql
 https://debezium.io/documentation/reference/1.7/connectors/mysql.html 
-
+https://towardsdatascience.com/stream-your-data-changes-in-mysql-into-elasticsearch-using-debizium-kafka-and-confluent-jdbc-b93821d4997b
+https://medium.com/dana-engineering/streaming-data-changes-in-mysql-into-elasticsearch-using-debezium-kafka-and-confluent-jdbc-sink-8890ad221ccf
 ```

@@ -70,6 +70,9 @@ kafka-topics.sh --list --bootstrap-server localhost:9092
 ### MySQL settings
 ```xml
 
+docker pull mysql  
+ocker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=<pwd> -d mysql:latest 
+
 MySQL settings:
 Connection URL: localhost:3306
 Database Name: test
@@ -104,6 +107,9 @@ https://www.confluent.io/hub/confluentinc/kafka-connect-jdbc
 
 Next I unzipped it and moved it to a folder called connect-plugin inside my kafka installation folder. So the unzipped folder resided inside the below directory in my case. 
 /Users/balaji/kafka_2.13-3.0.0/connect-plugin/confluentinc-kafka-connect-jdbc-10.2.3
+
+Also make sure to copy the MySQL connection driver to the lib directory of the above folder.
+In my case the driver was mysql-connector-java-8.0.26.jar
 
 Create the Kafka connect config:
 

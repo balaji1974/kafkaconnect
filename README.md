@@ -254,6 +254,99 @@ kafka-console-consumer.sh --topic localhost.test.employee --from-beginning --boo
 
 ```
 
+## Kafka Sink Connect with Elasticsearch in standalone mode
+
+```xml
+For regular elasticsearch install, setup and run, please refer to my elasticsearch documentation under my nosql repository 
+
+Install Elasicsearch using docker
+docker pull elasticsearch:7.14.1 -> Note version is mandatory as elastic does not support the 'latest' tag. 
+
+docker network create elasticnetwork -> Create our own network to run elasticsearch inside docker
+
+docker run -d --name elasticsearch --net elasticnetwork -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.14.1
+
+Query our server status by opening our rest client and running the follow URL:
+GET localhost:9200/
+
+
+For the sake of simplicy I will be using the same connector I used in my first example for streaming my data into the Kafka topic. 
+From their I will sink that data into my elasticsearch. 
+
+Next download the elastic sink connector from the below URL:
+https://www.confluent.io/hub/confluentinc/kafka-connect-elasticsearch
+
+Move the unzipped folder to our /Users/balaji/kafka_2.13-3.0.0/connect-plugin/ folder as below. 
+Note: Pls move the entire folder and not the lib files alone. 
+
+Create the Kafka elastic sink config:
+
+Under thee folder called connect-config inside my kafka installation create create two property files. 
+worker-elastic.properties
+elasticsink.properties 
+mysql.propeties (this will be the same file as my first example)
+
+Lets look at them one by one. 
+
+worker-elastic.properties -> This is the main properties file for the worker and it contains the following configuration: 
+
+# from more information, visit: http://docs.confluent.io/3.2.0/connect/userguide.html#common-worker-configs
+bootstrap.servers=127.0.0.1:9092
+key.converter=org.apache.kafka.connect.json.JsonConverter
+key.converter.schemas.enable=true
+value.converter=org.apache.kafka.connect.json.JsonConverter
+value.converter.schemas.enable=true
+# we always leave the internal key to JsonConverter
+internal.key.converter=org.apache.kafka.connect.json.JsonConverter
+internal.key.converter.schemas.enable=true
+internal.value.converter=org.apache.kafka.connect.json.JsonConverter
+internal.value.converter.schemas.enable=true
+# this config is only for standalone workers
+offset.storage.file.filename=offsets/standalone.offsets
+offset.flush.interval.ms=10000
+topic.creation.enable=true 
+plugin.path=/Users/balaji/kafka_2.13-3.0.0/connect-plugin/confluentinc-kafka-connect-jdbc-10.2.3,/Users/balaji/kafka_2.13-3.0.0/connect-plugin/confluentinc-kafka-connect-elasticsearch-11.1.2
+
+
+elasticsink.properties -> This is the elastic sink connector specific configuration and it contains the follow configuration: 
+
+name=confluent-elastic-sink
+connector.class=io.confluent.connect.elasticsearch.ElasticsearchSinkConnector
+tasks.max=1
+connection.url=http://localhost:9200
+#connection.user=root
+#connection.password=<pwd>
+topics=mysql-employee
+key.ignore=true
+type.name=kafka-connect
+
+mysql.properties -> Content is the same as the first example
+
+ame=confluent-mysql-source
+connector.class=io.confluent.connect.jdbc.JdbcSourceConnector
+tasks.max=1
+connection.url=jdbc:mysql://localhost:3306/test
+connection.user=root
+connection.password=STKVALUE
+topic.prefix=mysql-
+mode=incrementing
+incrementing.column.name=id
+validate.non.null=false
+table.types=TABLE, VIEW
+poll.interval.ms=1000
+table.whitelist=test.employee
+
+For us to see if we are receiving the data from the source create a consumer to the topic and check: 
+kafka-console-consumer.sh --topic mysql-employee --from-beginning --bootstrap-server localhost:9092
+
+The below command will run both the source and sink connectors and you can watch the data flow from MySQL to Elasticsearch
+connect-standalone.sh connect-config/worker-elastic.properties connect-config/mysql.properties connect-config/elasticsink.properties
+
+Note: if you need to run both your source and sink connectors in different instances then configure the property called rest.port in the worker.properties to differnt ports and run them seperately.  
+
+```
+
+
 ```xml
 References: 
 https://www.confluent.io/hub/debezium/debezium-connector-mysql

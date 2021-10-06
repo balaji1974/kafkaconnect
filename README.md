@@ -453,6 +453,19 @@ Note: if you need to run both your source and sink connectors in different insta
 
 ## Connetors in Distributed Mode - To complete
 ## Single Message Transformers - To complete
+
+```xml
+    "transforms": "convert_op_ts,convert_current_ts",
+    "transforms.convert_op_ts.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
+    "transforms.convert_op_ts.target.type": "Timestamp",
+    "transforms.convert_op_ts.field": "current_ts",
+    "transforms.convert_op_ts.format": "yyyy-MM-dd HH:mm:ss.SSSSSS",
+    "transforms.convert_current_ts.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
+    "transforms.convert_current_ts.target.type": "Timestamp",
+    "transforms.convert_current_ts.field": "op_ts",
+    "transforms.convert_current_ts.format": "yyyy-MM-dd HH:mm:ss.SSSSSS"
+```
+
 ## Creating Custom Connectors - To complete 
 
 

@@ -451,6 +451,10 @@ Note: if you need to run both your source and sink connectors in different insta
 ```
 
 
+## Connetors in Distributed Mode - To complete
+## Single Message Transformers - To complete
+## Creating Custom Connectors - To complete 
+
 
 ```xml
 References: 

@@ -174,15 +174,33 @@ MySQL query to run for CDC to work
 
 SET GLOBAL binlog_format = 'ROW';
 SET GLOBAL binlog_row_image='FULL';
-show variables like 'server_id';
 set @@GLOBAL.gtid_mode=OFF_PERMISSIVE;
 set @@GLOBAL.gtid_mode=ON_PERMISSIVE;
-set @@GLOBAL.ENFORCE_GTID_CONSISTENCY=ON;
 set @@GLOBAL.gtid_mode=ON;
+set @@GLOBAL.enforce_gtid_consistency=ON;
 set @@GLOBAL.binlog_rows_query_log_events=ON; 
 
+show variables like 'server_id';
 show global variables like '%GTID%';
 
+But this method of adding will disappear if the mysql server restarts. 
+
+To make it permenant add this to the my.cnf file located in /etc/ directory. My setting for my.cnf file is:
+[mysqld]
+binlog_format=ROW
+binlog_row_image=FULL
+binlog_rows_query_log_events=ON 
+gtid_mode=OFF_PERMISSIVE
+gtid_mode=ON_PERMISSIVE
+gtid_mode=ON
+enforce_gtid_consistency=ON
+
+Save the file and restart mysql to make the changes effective. 
+
+If you are using docker export this file first make the changes, save and import back to docker
+Eg. 
+docker cp mysql:/etc/my.cnf . - Import the file from docker to the local folder where container name is 'mysql'
+docker cp my.cnf mysql:/etc/my.cnf - Export it back to the container named 'mysql'
 
 Download the Kafka source connector
 
@@ -247,8 +265,11 @@ table.whitelist=test.employee
 
 Note: By default 2 topics will be created. One will have the name set in the database.history.kafka.topic parameter. This will hold the complete DDL details and will monitor for changes in DDL if the parameter is set. Another will have the name set by the combinataion of "database.server.name"."schema-name"."table-name" 
 
+The below command will run cdc source connectors and you can watch the data flow from MySQL 
+connect-standalone.sh connect-config/worker.properties connect-config/mysqlcdc.properties
+
 For us to see if we are receiving the data from the source create a consumer to the topic and check: 
-kafka-console-consumer.sh --topic employeecdc --from-beginning --bootstrap-server localhost:9092
+kafka-console-consumer.sh --topic employeecdc --from-beginning --bootstrap-server localhost:9092 
 
 kafka-console-consumer.sh --topic localhost.test.employee --from-beginning --bootstrap-server localhost:9092
 
@@ -346,7 +367,88 @@ Note: if you need to run both your source and sink connectors in different insta
 
 ```
 
+## Kafka Sink Connect with Elasticsearch based on MySQL CDC source in standalone mode
 
+```xml
+For regular elasticsearch install, refer previous section
+
+
+For the sake of simplicy I will be using the same mysql cdc connector I used in my second example for streaming my data into the Kafka topic. 
+From their I will sink that data into my elasticsearch. 
+
+Download and installation of mysql cdc source connector and elastic sink connector already discussed in the previous examples. 
+Please follow that
+
+Create the Kafka elastic sink config:
+
+Under thee folder called connect-config inside my kafka installation create create three property files. 
+worker-elasticcdc.properties 
+mysqlcdc.propeties 
+elasticsinkcdc.properties
+
+Lets look at them one by one. 
+
+worker-elasticcdc.properties -> This is the main properties file for the worker and it contains the following configuration: 
+
+# from more information, visit: http://docs.confluent.io/3.2.0/connect/userguide.html#common-worker-configs
+bootstrap.servers=127.0.0.1:9092
+key.converter=org.apache.kafka.connect.json.JsonConverter
+key.converter.schemas.enable=true
+value.converter=org.apache.kafka.connect.json.JsonConverter
+value.converter.schemas.enable=true
+# we always leave the internal key to JsonConverter
+internal.key.converter=org.apache.kafka.connect.json.JsonConverter
+internal.key.converter.schemas.enable=true
+internal.value.converter=org.apache.kafka.connect.json.JsonConverter
+internal.value.converter.schemas.enable=true
+# this config is only for standalone workers
+offset.storage.file.filename=offsets/standalone.offsets
+offset.flush.interval.ms=10000
+topic.creation.enable=true 
+plugin.path=/Users/balaji/kafka_2.13-2.8.0/connect-plugin/debezium-debezium-connector-mysql-1.7.0,/Users/balaji/kafka_2.13-2.8.0/connect-plugin/confluentinc-kafka-connect-elasticsearch-11.1.2
+
+mysqlcdc.propeties -> This will be the same as the mysql source cdc example before
+
+name=employee-connector
+tasks.max=1
+connector.class=io.debezium.connector.mysql.MySqlConnector
+database.hostname=localhost
+database.port=3306
+database.user=root
+database.password=<pwd>
+database.server.id=1
+database.server.name=localhost
+database.include.list=test
+database.history.kafka.bootstrap.servers=localhost:9092
+database.history.kafka.topic=employeecdc
+include.schema.changes=false
+table.whitelist=test.employee
+
+eelasticsinkcdc.properties -> This is the elastic sink connector specific configuration and it contains the follow configuration: 
+
+name=confluent-elastic-sink
+connector.class=io.confluent.connect.elasticsearch.ElasticsearchSinkConnector
+tasks.max=1
+connection.url=http://localhost:9200
+#connection.user=root
+#connection.password=<pwd>
+topics=localhost.test.employee
+transforms=key
+#transforms.unwrap.type=io.debezium.transforms.UnwrapFromEnvelope
+transforms.key.type=org.apache.kafka.connect.transforms.ExtractField$Key
+transforms.key.field=id
+key.ignore=false
+type.name=employee
+
+The below command will run both the source and sink connectors and you can watch the data flow from MySQL to Elasticsearch
+connect-standalone.sh connect-config/worker-elasticcdc.properties connect-config/mysqlcdc.properties connect-config/elasticsinkcdc.properties
+
+For us to see if we are receiving the data from the source create a consumer to the topic and check: 
+kafka-console-consumer --topic localhost.test.employee --from-beginning --bootstrap-server localhost:9092
+
+Note: if you need to run both your source and sink connectors in different instances then configure the property called rest.port in the worker.properties to differnt ports and run them seperately.  
+
+```
 
 
 

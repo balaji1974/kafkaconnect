@@ -452,11 +452,121 @@ Note: if you need to run both your source and sink connectors in different insta
 
 
 ## Connetors in Distributed Mode - To complete
-## Single Message Transformers - To complete
 
 ```xml
-    "transforms": "convert_op_ts,convert_current_ts",
-    "transforms.convert_op_ts.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
+For regular mysql & elasticsearch  install, refer previous section
+For mysql configurations for CDC please refer to my previous section
+
+Download and installation of mysql cdc source connector and elastic sink connector already discussed in the previous examples. 
+
+Create the Kafka worker config:
+
+Under thee folder called connect-config inside my kafka installation create a property file called. 
+worker-elasticcdc.properties
+
+Lets look the contents of this file. 
+
+worker-elasticcdc.properties -> This is the main properties file for the worker and it contains the following configuration: 
+bootstrap.servers=localhost:9092
+group.id=cluster-1-distributed-cluster
+key.converter=org.apache.kafka.connect.json.JsonConverter
+value.converter=org.apache.kafka.connect.json.JsonConverter
+key.converter.schemas.enable=false
+value.converter.schemas.enable=false
+offset.storage.topic=cluster-1-distributed-offsets
+offset.storage.replication.factor=1
+offset.storage.partitions=50
+config.storage.topic=cluster-1-distributed-config
+config.storage.replication.factor=1
+config.storage.partitions=1
+status.storage.topic=cluster-1-distributed-status
+status.storage.replication.factor=1
+status.storage.partitions=10
+offset.flush.interval.ms=10000
+rest.host.name=localhost
+rest.port=8083
+rest.advertised.host.name=127.0.0.1
+rest.advertised.port=8083
+plugin.path=/Users/balaji/kafka_2.13-2.8.0/connect-plugin/debezium-debezium-connector-mysql-1.7.0,/Users/balaji/kafka_2.13-2.8.0/connect-plugin/confluentinc-kafka-connect-elasticsearch-11.1.2
+internal.value.converter=org.apache.kafka.connect.json.JsonConverter
+internal.key.converter=org.apache.kafka.connect.json.JsonConverter
+task.shutdown.graceful.timeout.ms=10000
+offset.flush.timeout.ms=5000
+
+With this in place we can start our connector in distributed mode using the command 
+connect-distributed connect-config/worker-elasticcdc.properties
+
+We can check if for registed source and sink in the connector using our REST client using the url: 
+GET http://localhost:8083/connectors
+
+Now lets register the source and the sink connectors (refer mysqlcdc.json & elasticsink.json files)
+POST http://localhost:8083/connectors
+{
+    "name": "employee-mysql-source-connector",
+    "config" : {
+        "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+        "tasks.max": "1",
+        "database.hostname": "localhost",
+        "database.port": "3306",
+        "database.user": "root",
+        "database.password": <pwd>,
+        "database.server.id": "1",
+        "database.server.name": "localhost",
+        "database.include.list": "test",
+        "database.history.kafka.bootstrap.servers": "localhost:9092",
+        "database.history.kafka.topic": "employeecdc",
+        "include.schema.changes": "false",
+        "table.inclue.list": "employee"
+    }
+}
+
+POST http://localhost:8083/connectors
+{
+    "name": "employee-elastic-sink-connector",
+    "config" : {
+        "connector.class" : "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+        "tasks.max": "1",
+        "connection.url" : "http://localhost:9200",
+        "topics": "localhost.test.employee",
+        "transforms": "unwrap,key",
+        "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+        "transforms.key.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+        "transforms.key.field": "id",
+        "key.ignore" :"false",
+        "schema.ignore" : "true",
+        "type.name" : "employee"
+    }
+}
+
+After the connectors are registered if we access the same URL again: 
+GET http://localhost:8083/connectors
+we will get the following response: 
+[
+    "employee-mysql-source-connector",
+    "employee-elastic-sink-connector"
+]
+
+This proves that our source and sink connectors are registered successfully. 
+
+Next create a console consumer to check if changes in the database table are pused to Kakfa with the following command. 
+kafka-console-consumer --topic localhost.test.employee --from-beginning --bootstrap-server localhost:9092
+
+Note: if you need to run both your source and sink connectors in different instances then configure the property called rest.port in the worker.properties to differnt ports and run them seperately. 
+
+Next check if the sink connector is receving the data correctly or not from the following URL: 
+GET http://localhost:9200/localhost.test.employee/_search&size=50
+
+```
+
+## Single Message Transformers - To complete Later (eg.)
+
+```xml
+Must be used only for simple transformation and must not be used for heavy processing.
+If heavy transformation is needed then we need to use Kafka Streams as an intermediate layer
+
+    
+    "transforms": "convert_op_ts,convert_current_ts", 
+    "transforms.convert_op_ts.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value", 
     "transforms.convert_op_ts.target.type": "Timestamp",
     "transforms.convert_op_ts.field": "current_ts",
     "transforms.convert_op_ts.format": "yyyy-MM-dd HH:mm:ss.SSSSSS",
@@ -475,4 +585,6 @@ https://www.confluent.io/hub/debezium/debezium-connector-mysql
 https://debezium.io/documentation/reference/1.7/connectors/mysql.html 
 https://towardsdatascience.com/stream-your-data-changes-in-mysql-into-elasticsearch-using-debizium-kafka-and-confluent-jdbc-b93821d4997b
 https://medium.com/dana-engineering/streaming-data-changes-in-mysql-into-elasticsearch-using-debezium-kafka-and-confluent-jdbc-sink-8890ad221ccf
+https://www.confluent.io/blog/kafka-connect-single-message-transformation-tutorial-with-examples/
+https://www.cnblogs.com/lenmom/p/10763589.html
 ```

@@ -20,6 +20,8 @@ If not found here then search in Google
 
 ```
 
+
+
 ## Kafka Source Connect with MySQL step-by step
 
 

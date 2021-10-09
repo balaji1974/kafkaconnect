@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Built-By: balaji
+Build-Jdk: 11.0.2
+Specification-Title: kafka-connect
+Specification-Version: 0.0.1-SNAPSHOT
+Implementation-Title: kafka-connect
+Implementation-Version: 0.0.1-SNAPSHOT
+Implementation-Vendor-Id: com.bala.kafka
+Created-By: Maven Integration for Eclipse
+

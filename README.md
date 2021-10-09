@@ -578,8 +578,11 @@ If heavy transformation is needed then we need to use Kafka Streams as an interm
     "transforms.convert_current_ts.format": "yyyy-MM-dd HH:mm:ss.SSSSSS"
 ```
 
-## Creating Custom Connectors - To complete 
+## Creating Custom Connectors 
+Refer to the project in the java folder of my repo.  
 
+## Interesting Kakfa connect UI available from the following URL
+https://hub.docker.com/r/landoop/kafka-connect-ui
 
 ```xml
 References: 

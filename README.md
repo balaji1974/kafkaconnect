@@ -599,6 +599,27 @@ Refer to the project in the java folder of my repo.
 ## Interesting Kakfa connect UI available from the following URL
 https://hub.docker.com/r/landoop/kafka-connect-ui
 
+## MS	SQL server CDC 
+```xml
+For MS SQL Server to enable CDC on a Database run the following:
+USE <Datavase Name>
+GO
+EXEC sys.sp_cdc_enable_db
+GO
+
+For MS SQL Server to enable CDC on a Table run the following: 
+USE <Database Name>
+GO
+
+EXEC sys.sp_cdc_enable_table
+@source_schema = N'dbo',
+@source_name   = N'MyTable', 
+@role_name     = N'MyRole',  
+@filegroup_name = N'MyDB_CT',
+@supports_net_changes = 0
+GO
+```
+
 ```xml
 References: 
 https://www.confluent.io/hub/debezium/debezium-connector-mysql

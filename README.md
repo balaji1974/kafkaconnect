@@ -450,6 +450,21 @@ kafka-console-consumer --topic localhost.test.employee --from-beginning --bootst
 
 Note: if you need to run both your source and sink connectors in different instances then configure the property called rest.port in the worker.properties to differnt ports and run them seperately.  
 
+Connector Supported Transformations:
+InsertField – Add a field using either static data or record metadata
+ReplaceField – Filter or rename fields
+MaskField – Replace a field with the valid null value for the type (zero or an empty string, for example)
+HoistField – Wrap the entire event as a single field inside a struct or a map
+ExtractField – Extract a specific field from struct and map and include only this field in the results
+SetSchemaMetadata – Modify the schema name or version
+TimestampRouter – Modify the topic of a record based on original topic and timestamp
+RegexRouter – Modify the topic of a record based on original topic, a replacement string, and a regular expression
+
+A transformation is configured using the following parameters:
+transforms – A comma-separated list of aliases for the transformations
+transforms.$alias.type – Class name for the transformation
+transforms.$alias.$transformationSpecificConfig – Configuration for the respective transformation
+
 ```
 
 
@@ -592,4 +607,5 @@ https://towardsdatascience.com/stream-your-data-changes-in-mysql-into-elasticsea
 https://medium.com/dana-engineering/streaming-data-changes-in-mysql-into-elasticsearch-using-debezium-kafka-and-confluent-jdbc-sink-8890ad221ccf
 https://www.confluent.io/blog/kafka-connect-single-message-transformation-tutorial-with-examples/
 https://www.cnblogs.com/lenmom/p/10763589.html
+https://www.baeldung.com/kafka-connectors-guide
 ```

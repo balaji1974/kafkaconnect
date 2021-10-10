@@ -618,15 +618,39 @@ EXEC sys.sp_cdc_enable_table
 @filegroup_name = N'MyDB_CT',
 @supports_net_changes = 0
 GO
+
+MS SQL Connector configuration sample:
+{
+    "name": "inventory-connector", 
+    "config": {
+        "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector", 
+        "database.hostname": "192.168.99.100", 
+        "database.port": "1433", 
+        "database.user": "sa", 
+        "database.password": "Password!", 
+        "database.dbname": "testDB", 
+        "database.server.name": "fullfillment", 
+        "table.include.list": "dbo.customers", 
+        "database.history.kafka.bootstrap.servers": "kafka:9092", 
+        "database.history.kafka.topic": "dbhistory.fullfillment" 
+    }
+}
+You can find a good example in this link
+https://medium.com/@ankulwarganesh10/streaming-sql-server-cdc-with-apache-kafka-using-debezium-82d89aafb885
+
 ```
+
 
 ```xml
 References: 
 https://www.confluent.io/hub/debezium/debezium-connector-mysql
 https://debezium.io/documentation/reference/1.7/connectors/mysql.html 
+https://debezium.io/documentation/reference/1.7/connectors/sqlserver.html
 https://towardsdatascience.com/stream-your-data-changes-in-mysql-into-elasticsearch-using-debizium-kafka-and-confluent-jdbc-b93821d4997b
 https://medium.com/dana-engineering/streaming-data-changes-in-mysql-into-elasticsearch-using-debezium-kafka-and-confluent-jdbc-sink-8890ad221ccf
 https://www.confluent.io/blog/kafka-connect-single-message-transformation-tutorial-with-examples/
 https://www.cnblogs.com/lenmom/p/10763589.html
 https://www.baeldung.com/kafka-connectors-guide
+https://medium.com/@ankulwarganesh10/streaming-sql-server-cdc-with-apache-kafka-using-debezium-82d89aafb885
+https://medium.com/@adrianedbertluman/syncing-sql-server-database-using-kafka-part-2-running-kafka-connect-3ebc8234bfe
 ```

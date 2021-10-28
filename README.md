@@ -96,7 +96,7 @@ INSERT INTO test.employee (id,employeename) VALUES
 
 ```
 
-### Running the Kakfa Connect in standalone mode
+### Kakfa Source Connector (MySQL) in standalone mode
 ```xml
 
 Download the Kafka source connector
@@ -168,7 +168,7 @@ kafka-console-consumer.sh --topic employee --from-beginning --bootstrap-server l
 
 ```
 
-## Kafka Source Connect with MySQL CDC step-by step
+## Kafka Source Connector CDC (MySQL) in standalone mode
 
 
 ```xml
@@ -277,7 +277,7 @@ kafka-console-consumer.sh --topic localhost.test.employee --from-beginning --boo
 
 ```
 
-## Kafka Sink Connect with Elasticsearch in standalone mode
+## Kafka Sink Connector (Elasticsearch) in standalone mode
 
 ```xml
 For regular elasticsearch install, setup and run, please refer to my elasticsearch documentation under my nosql repository 
@@ -369,7 +369,7 @@ Note: if you need to run both your source and sink connectors in different insta
 
 ```
 
-## Kafka Sink Connect with Elasticsearch based on MySQL CDC source in standalone mode
+## Kafka Source and Sink Connector (Elasticsearch - MySQL) CDC in standalone mode
 
 ```xml
 For regular elasticsearch install, refer previous section
@@ -468,7 +468,7 @@ transforms.$alias.$transformationSpecificConfig – Configuration for the respec
 ```
 
 
-## Connetors in Distributed Mode - To complete
+## Kafka Source and Sink Connector (Elasticsearch - MySQL) CDC in distributed mode
 
 ```xml
 For regular mysql & elasticsearch  install, refer previous section

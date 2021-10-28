@@ -575,6 +575,12 @@ GET http://localhost:9200/localhost.test.employee/_search&size=50
 
 ```
 
+## Delete a connector installed in distributed mode 
+```xml
+DELETE ttp://localhost:8083/connectors/<connector-name>
+
+```
+
 ## Single Message Transformers - To complete Later (eg.)
 
 ```xml

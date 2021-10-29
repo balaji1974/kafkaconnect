@@ -581,6 +581,114 @@ DELETE ttp://localhost:8083/connectors/<connector-name>
 
 ```
 
+## worker.properties file explained 
+```xml
+# References https://docs.confluent.io/platform/current/connect/references/allconfigs.htm
+# List of Common configurations
+# -----------------------------
+
+# List of host/port pairs to use for establishing the initial connection to the Kafka cluster. 
+# Since these servers are just used for the initial connection to discover the full cluster membership, 
+# this list need not contain the full set of servers (you may want more than one, though, in case a server is down) 
+bootstrap.servers=localhost:9092
+
+# This controls the format of the key data that will be written to Kafka for source connectors 
+# or read from Kafka for sink connectors.
+key.converter=org.apache.kafka.connect.json.JsonConverter
+
+# This controls the format of the value data that will be written to Kafka for source connectors 
+# or read from Kafka for sink connectors
+value.converter=org.apache.kafka.connect.json.JsonConverter
+
+# Used for converting key data for offsets and configs.
+internal.key.converter=org.apache.kafka.connect.json.JsonConverter
+
+# Used for converting value data for offsets and configs.
+internal.value.converter=org.apache.kafka.connect.json.JsonConverter
+
+# Interval at which to try committing offsets for tasks
+offset.flush.interval.ms=10000
+
+# Maximum number of milliseconds to wait for records to flush and partition offset data to be committed to offset storage 
+# or cancel and resume in the next attempt
+offset.flush.timeout.ms=5000
+
+# The comma-separated list of paths to directories that contain Kafka Connect plugins
+plugin.path=/Users/balaji/kafka_2.13-2.8.0/connect-plugin/debezium-debezium-connector-mysql-1.7.0,/Users/balaji/kafka_2.13-2.8.0/connect-plugin/confluentinc-kafka-connect-elasticsearch-11.1.2
+
+# Hostname for the REST API, give the actual host name in production
+rest.host.name=localhost
+
+# Port for the REST API to listen on
+rest.port=8083
+
+# This is the hostname that will be given out to other Workers to connect to, do not set localhost in production
+rest.advertised.host.name=localhost
+
+# This is the port that will be given out to other Workers to connect to.
+rest.advertised.port=8083
+
+# Configures the listener used for communication between Workers. Valid values are either http or https
+rest.advertised.listener=http
+
+# Amount of time to wait for tasks to shutdown gracefully
+task.shutdown.graceful.timeout.ms=10000
+
+
+# Standalone worker configuration
+# -------------------------------
+
+# The file to store connector offsets in. By storing offsets on disk, a standalone process can be stopped 
+# and started on a single node and resume where it previously left off.
+offset.storage.file.filename=offsets/standalone.offsets
+
+
+# Distributed worker configuration
+# --------------------------------
+
+# A unique string that identifies the Connect cluster group this Worker belongs to
+# This is not applicable for sink connectors. For sink connectors, the group.id is created programmatically 
+# using the prefix connect- and the connector name
+group.id=cluster-1-distributed-cluster
+
+# The name of the topic where connector and task configuration data are stored. 
+# This must be the same for all Workers with the same group.id
+config.storage.topic=cluster-1-distributed-config
+
+# The replication factor used when Kafka Connects creates the topic used to store connector and task configuration data.
+# Recommended 3 in production system
+config.storage.replication.factor=1
+
+# The name of the topic where connector and task configuration offsets are stored. 
+# This must be the same for all Workers with the same group.id.
+offset.storage.topic=cluster-1-distributed-offsets
+
+# The replication factor used when Connect creates the topic used to store connector offsets. 
+# This should always be at least 3 for a production system
+offset.storage.replication.factor=1
+
+# The number of partitions used when Connect creates the topic used to store connector offsets.
+# Large value is recommended. Default is 25.
+offset.storage.partitions=50
+
+# The name of the topic where connector and task configuration status updates are stored. 
+# This must be the same for all Workers with the same group.id. 
+status.storage.topic=cluster-1-distributed-status
+
+# The replication factor used when Connect creates the topic used to store connector and task status updates. 
+# This should always be at least 3 for a production system
+status.storage.replication.factor=1
+
+# The number of partitions used when Connect creates the topic used to store connector and task status updates.
+# Default value is 5
+status.storage.partitions=10
+
+
+These are the minimal needed configurations that need to be set for a Kafka connect worker
+
+```
+
+
 ## Single Message Transformers - To complete Later (eg.)
 
 ```xml

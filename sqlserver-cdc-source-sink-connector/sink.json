@@ -1,0 +1,15 @@
+{"name": "time-trn-sink-connector",
+    "config": {  
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",  
+        "tasks.max": "1",  
+        "key.converter":"org.apache.kafka.connect.json.JsonConverter",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "topics": "TIME_TRN", 
+        "dialect.name": "SqlServerDatabaseDialect", 
+        "connection.url": "jdbc:sqlserver://hr-tst:1433;database=<DBName>", 
+        "connection.database" : "<DBName>", 
+        "connection.user": "<userid>",  
+        "connection.password": "<password>",  
+        "auto.create": "true"
+    }
+}

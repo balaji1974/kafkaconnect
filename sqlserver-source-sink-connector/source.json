@@ -1,0 +1,17 @@
+{
+    "name": "time-trn-source-connector", 
+    "config": {
+        "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector", 
+        "dialect.name": "SqlServerDatabaseDialect", 
+        "connection.url": "jdbc:sqlserver://<servername or ip>:1433;database=<database name>", 
+        "connection.database" : "<database name>", 
+        "connection.user": "<user id>",  
+        "connection.password": "<password>",  
+        "mode":"incrementing",
+        "incrementing.column.name":"TRN_NO",
+        "validate.non.null":"false",
+        "table.types": "TABLE, VIEW",
+        "poll.interval.ms":"1000",
+        "table.whitelist":"TIME_TRN"
+    }
+}

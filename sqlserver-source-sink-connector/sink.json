@@ -1,0 +1,18 @@
+{"name": "core1-sink-connector",
+    "config": {  
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",  
+        "tasks.max": "1",  
+        "key.converter":"org.apache.kafka.connect.json.JsonConverter",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "topics": "TIME_TRN", 
+        "dialect.name": "SqlServerDatabaseDialect", 
+        "connection.url": "jdbc:sqlserver://<server name>:1433;database=<database name>", 
+        "connection.database" : "<database name>", 
+        "connection.user": "<user id>",  
+        "connection.password": "<password>",  
+        "auto.create": "true",
+        "transforms": "ReplaceField",
+        "transforms.ReplaceField.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+        "transforms.ReplaceField.blacklist": "TRN_NO"
+    }
+}

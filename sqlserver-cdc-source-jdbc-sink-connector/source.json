@@ -1,0 +1,21 @@
+{
+    "name": "time-trn-source-connector",
+    "config": {
+        "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
+        "database.hostname": "<host name or ip>",
+        "database.port": "1433",
+        "database.user": "<user name>",
+        "database.password": "<password>",
+        "database.dbname": "<database name>",
+        "database.server.name": "<server name>",
+        "table.include.list": "dbo.time_trn",
+        "database.history.kafka.bootstrap.servers": "localhost:9092",
+        "database.history.kafka.topic": "dbhistory.time_trn",
+        "transforms": "route, unwrap",
+        "transforms.unwrap.type" : "io.debezium.transforms.ExtractNewRecordState",
+        "transforms.unwrap.drop.tombstones" : "false",
+        "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+        "transforms.route.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
+        "transforms.route.replacement": "$3"
+    }
+}

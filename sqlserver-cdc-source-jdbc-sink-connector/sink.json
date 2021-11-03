@@ -1,0 +1,20 @@
+{"name": "time-trn-sink-connector",
+    "config": {  
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",  
+        "tasks.max": "1",
+        "topics": "TIME_TRN",
+        "dialect.name": "SqlServerDatabaseDialect",
+        "connection.url": "jdbc:sqlserver://<server name or ip>:1433;database=<database name>",
+        "connection.database" : "<database name>",
+        "connection.user": "<user name>",  
+        "connection.password": "<password>",  
+        "auto.create": "true",
+        "insert.mode": "upsert",
+        "drop.tombstones": "true",
+        "delete.enabled": "true",
+        "delete.retention.ms" : "100",
+        "pk.fields": "TRN_NO",
+        "pk.mode": "record_key",
+        "schemas.enable":"true"
+    }
+}

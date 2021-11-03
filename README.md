@@ -876,6 +876,140 @@ https://medium.com/@ankulwarganesh10/streaming-sql-server-cdc-with-apache-kafka-
 ```
 
 
+## Kafka CDC Source and JDBC Sink Connector (MSSQL Server 1 to MSSQL Server 2) - Moving any change records from one server to another - Distributed version 
+### This project file is under the sqlserver-cdc-source-jdbc-sink-connector folder
+
+```xml
+Download and install the Debezium CDC source connector for SQL Server and JDBC Sink connector from the following urls: 
+https://www.confluent.io/hub/debezium/debezium-connector-sqlserver
+https://www.confluent.io/hub/confluentinc/kafka-connect-jdbc 
+
+Extract the jar and move it to your connector plugin folder. In my case it is under: 
+C:\kafka_2.13-2.8.1\connectors\plugin
+
+Create the Kafka worker config file under the connector config folder. In my case it is under: 
+C:\kafka_2.13-2.8.1\connectors\config\worker.properties
+
+Lets look at the contents of this file. 
+
+worker.properties -> This is the main properties file for the worker and it contains the following configuration: 
+bootstrap.servers=localhost:9092
+group.id=time-trn-cluster
+key.converter=org.apache.kafka.connect.json.JsonConverter
+value.converter=org.apache.kafka.connect.json.JsonConverter
+key.converter.schemas.enable=true
+value.converter.schemas.enable=true
+internal.value.converter=org.apache.kafka.connect.json.JsonConverter
+internal.key.converter=org.apache.kafka.connect.json.JsonConverter
+internal.key.converter.schemas.enable=false
+internal.value.converter.schemas.enable=false
+offset.storage.topic=time-trn-offsets
+offset.storage.replication.factor=1
+offset.storage.partitions=50
+config.storage.topic=time-trn-config
+config.storage.replication.factor=1
+config.storage.partitions=1
+status.storage.topic=time-trn-status
+status.storage.replication.factor=1
+status.storage.partitions=10
+offset.flush.interval.ms=10000
+rest.host.name=localhost
+rest.port=8083
+rest.advertised.host.name=localhost
+rest.advertised.port=8083
+plugin.path=C:/kafka_2.13-2.8.1/connectors/plugin/debezium-debezium-connector-sqlserver-1.7.0,C:/kafka_2.13-2.8.1/connectors/plugin/confluentinc-kafka-connect-jdbc-10.2.5
+task.shutdown.graceful.timeout.ms=10000
+offset.flush.timeout.ms=5000
+
+
+Now lets start our Zookeeper and Kafka server with the following commands: (issue it from the Kafka root directory)
+bin\windows\zookeeper-server-start config\zookeeper.properties
+bin\windows\kafka-server-start config\server.properties
+
+With this in place we can start our connector in distributed mode using the command (issue it from the Kafka root directory)
+bin\windows\connect-distributed connectors\config\worker.properties
+
+We can check for registed source and sink connectors using our REST client from the url: 
+GET http://localhost:8083/connectors
+
+Now lets register the source and the sink connectors (source.json & sink.json files)
+
+Source Connector
+POST http://localhost:8083/connectors
+{
+    "name": "time-trn-source-connector",
+    "config": {
+        "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
+        "database.hostname": "<host name or ip>",
+        "database.port": "1433",
+        "database.user": "<user name>",
+        "database.password": "<password>",
+        "database.dbname": "<database name>",
+        "database.server.name": "<server name>",
+        "table.include.list": "dbo.time_trn",
+        "database.history.kafka.bootstrap.servers": "localhost:9092",
+        "database.history.kafka.topic": "dbhistory.time_trn",
+        "transforms": "route, unwrap",
+        "transforms.unwrap.type" : "io.debezium.transforms.ExtractNewRecordState",
+        "transforms.unwrap.drop.tombstones" : "false",
+        "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+        "transforms.route.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
+        "transforms.route.replacement": "$3"
+    }
+}
+
+Here we will have to note the 2 transformers that I user. 
+First one is the route transformer for overriding the default topic created by CDC connector which would be database.schema.tablenae with just the name of the table.
+Next is the unwrap transformer which is used for easy transformation of data from CDC format to the JDBC consumer format. Also setting the tombstone to false 
+means the delete columns would be sent as null records for the sink connectors to perfrom the delete query. 
+
+Sink Connector 
+POST http://localhost:8083/connectors
+{"name": "time-trn-sink-connector",
+    "config": {  
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",  
+        "tasks.max": "1",
+        "topics": "TIME_TRN",
+        "dialect.name": "SqlServerDatabaseDialect",
+        "connection.url": "jdbc:sqlserver://hr-tst:1433;database=AACDB_PROD_2021_08_11",
+        "connection.database" : "AACDB_PROD_2021_08_11",
+        "connection.user": "sa",  
+        "connection.password": "satest12$45",  
+        "auto.create": "true",
+        "insert.mode": "upsert",
+        "drop.tombstones": "true",
+        "delete.enabled": "true",
+        "delete.retention.ms" : "100",
+        "pk.fields": "TRN_NO",
+        "pk.mode": "record_key",
+        "schemas.enable":"true"
+    }
+}
+
+Here insert mode upsert means that records will be either inserted or updated. 
+Also delete enabled will perfrom the delete query for deleted records. 
+
+After the connectors are registered if we access the same URL again: 
+GET http://localhost:8083/connectors
+we will get the following response: 
+[
+    "time-trn-source-connector",
+    "time-trn-sink-connector"
+]
+
+This proves that our source and sink connectors are registered successfully. 
+
+Next create a console consumer to check if records added in the database table are parsed to Kakfa with the following command. 
+kafka-console-consumer --topic TIME_TRN --from-beginning --bootstrap-server localhost:9092
+
+Note: if you need to run both your source and sink connectors in different instances then configure the property called rest.port in the worker.properties
+ to differnt ports and run them seperately. 
+
+Next check if the target database tables syncs the data as per the actions that take place on the source table (insert/update/delete). 
+
+```
+
+
 ```xml
 References: 
 https://www.confluent.io/hub/debezium/debezium-connector-mysql
